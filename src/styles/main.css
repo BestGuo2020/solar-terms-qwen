@@ -255,7 +255,7 @@ button { font-family: inherit; }
 .hud-tools__row { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
 
 .hud-geo {
-  position: absolute; left: 12px; bottom: 40px;
+  position: absolute; left: 12px; bottom: 0px;
   background: rgba(8, 12, 22, 0.78); border: 1px solid var(--line-dark);
   border-radius: var(--radius-sm); padding: 7px 10px;
   font-size: 11.5px; color: var(--fg-soft); backdrop-filter: blur(8px);
