@@ -244,17 +244,16 @@ defineExpose({ setView, resetView, manager: () => manager })
         </ul>
 
         <div class="hud-panel-wrap">
-          <!-- 弹出面板：分组收纳全部场景控制 -->
+          <!-- 视角使用频率最高：作为一条紧凑分段控件常驻，其余控制收进面板 -->
+          <span class="seg seg--sm hud-views" role="group" :aria-label="t('tools.views')">
+            <button v-for="v in VIEWS" :key="v.id" type="button"
+                    :aria-pressed="currentView === v.id" :title="t('view.' + v.id + '.hint')"
+                    @click="setView(v.id)">{{ t('view.' + v.id) }}</button>
+            <button type="button" :title="t('view.reset.hint')" @click="resetView">{{ t('view.reset') }}</button>
+          </span>
+
+          <!-- 弹出面板：分组收纳其余场景控制 -->
           <div id="hud-panel" class="hud-panel" v-show="panelOpen" role="group" :aria-label="t('tools.panel')">
-            <div class="hud-panel__group">
-              <span class="hud-panel__t">{{ t('tools.views') }}</span>
-              <div class="hud-panel__grid">
-                <button v-for="v in VIEWS" :key="v.id" type="button" class="btn btn--sm"
-                        :class="{ 'is-on': currentView === v.id }" :aria-pressed="currentView === v.id"
-                        :title="t('view.' + v.id + '.hint')" @click="setView(v.id)">{{ t('view.' + v.id) }}</button>
-                <button type="button" class="btn btn--sm" :title="t('view.reset.hint')" @click="resetView">{{ t('view.reset') }}</button>
-              </div>
-            </div>
             <div class="hud-panel__group">
               <span class="hud-panel__t">{{ t('tools.helpers') }}</span>
               <div class="hud-panel__grid hud-panel__grid--helpers">
@@ -316,7 +315,8 @@ defineExpose({ setView, resetView, manager: () => manager })
 }
 
 /* 唯一常驻的圆形按钮 */
-.hud-panel-wrap { position: relative; display: flex; flex-direction: column; align-items: flex-end; }
+.hud-panel-wrap { position: relative; display: flex; flex-direction: column; align-items: flex-end; gap: 8px; }
+.hud-views { backdrop-filter: blur(8px); box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4); }
 .hud-fab {
   width: 42px; height: 42px; border-radius: 50%;
   display: inline-flex; align-items: center; justify-content: center;

@@ -5,7 +5,8 @@
  *
  * 断言：
  *  1. 默认只有一颗 ⚙ 圆形按钮，面板隐藏（画面干净）；
- *  2. 点开后 19 个控制齐全（视角5 + 辅助7 + 标签3 + 画质3 + 保存1），aria-expanded 同步；
+ *  2. 点开后 14 个控制齐全（辅助7 + 标签3 + 画质3 + 保存1），aria-expanded 同步；
+ *     视角分段控件（5 项）则常驻可见，不随面板收合；
  *  3. 面板内开关真实生效（关掉"轨道"后 rig.ring.visible === false）；
  *  4. 再点收起，面板隐藏；开/合状态写入 localStorage 且刷新后保持；
  *  5. 左下天文读数默认单行、说明隐藏，点击展开说明；
@@ -78,6 +79,8 @@ const state = () => ev(`(() => {
     panelVisible: !!panel && panel.getClientRects().length > 0,
     panelBtns: panel ? panel.querySelectorAll('button').length : 0,
     panelW: panel ? Math.round(panel.getBoundingClientRect().width) : 0,
+    viewsBtns: document.querySelectorAll('.hud-views button').length,
+    viewsVisible: !!document.querySelector('.hud-views') && document.querySelector('.hud-views').getClientRects().length > 0,
     geoNoteVisible: !!geo && !!geo.querySelector('.hud-geo__note') && geo.querySelector('.hud-geo__note').getClientRects().length > 0,
     geoLines: geo ? geo.querySelectorAll('.hud-geo__line').length : 0,
     docOverflow: document.documentElement.scrollWidth > window.innerWidth + 1,
@@ -90,12 +93,14 @@ console.log('\n[1] 默认收起')
 let s = await state()
 if (s.hasFab && s.ariaControls === 'hud-panel' && s.ariaExpanded === 'false' && !s.panelVisible) ok('默认只有一颗 ⚙ 按钮（aria-controls=hud-panel），面板隐藏')
 else bad(`默认状态异常：${JSON.stringify(s)}`)
+if (s.viewsVisible && s.viewsBtns === 5) ok('视角分段控件常驻可见（4 视角 + 重置 = 5 项）')
+else bad(`视角常驻控件异常：visible=${s.viewsVisible} btns=${s.viewsBtns}`)
 if (!s.docOverflow) ok('默认状态无横向溢出')
 
 console.log('\n[2] 展开后控制齐全且生效')
 await clickFab()
 s = await state()
-if (s.panelVisible && s.panelBtns === 19 && s.ariaExpanded === 'true') ok(`面板展开：19 个控制（视角5+辅助7+标签3+画质3+保存1），宽 ${s.panelW}px`)
+if (s.panelVisible && s.panelBtns === 14 && s.ariaExpanded === 'true') ok(`面板展开：14 个控制（辅助7 + 标签3 + 画质3 + 保存1），宽 ${s.panelW}px`)
 else bad(`展开异常：visible=${s.panelVisible} btns=${s.panelBtns} expanded=${s.ariaExpanded}`)
 const toggled = await ev(`(() => {
   const j = window.__jieqi;
