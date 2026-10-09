@@ -1,0 +1,91 @@
+{
+  "generatedAt": "2026-10-08T14:06:01.204Z",
+  "textures": [
+    {
+      "file": "earth_day.jpg",
+      "bytes": 463087,
+      "sources": [
+        "https://www.solarsystemscope.com/textures/download/2k_earth_daymap.jpg"
+      ],
+      "credit": "Solar System Scope / INOVE, https://www.solarsystemscope.com/textures/ — CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/). 底图源自 NASA 等公开影像。",
+      "desc": "地球白昼海陆底图（2048×1024，默认与移动端画质）",
+      "required": true,
+      "status": "cached"
+    },
+    {
+      "file": "earth_day_4k.jpg",
+      "bytes": 4565076,
+      "sources": [
+        "https://www.solarsystemscope.com/textures/download/8k_earth_daymap.jpg"
+      ],
+      "used": "https://www.solarsystemscope.com/textures/download/8k_earth_daymap.jpg",
+      "credit": "Solar System Scope / INOVE, https://www.solarsystemscope.com/textures/ — CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/). 底图源自 NASA 等公开影像。",
+      "desc": "地球白昼海陆底图（8192×4096 原图，高画质桌面端按需加载；仅当 WebGL MAX_TEXTURE_SIZE ≥ 8192 时启用）",
+      "required": false,
+      "status": "downloaded"
+    },
+    {
+      "file": "earth_night.jpg",
+      "bytes": 255287,
+      "sources": [
+        "https://www.solarsystemscope.com/textures/download/2k_earth_nightmap.jpg"
+      ],
+      "credit": "Solar System Scope / INOVE, https://www.solarsystemscope.com/textures/ — CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/). 底图源自 NASA 等公开影像。",
+      "desc": "地球夜面城市灯光图",
+      "required": true,
+      "status": "cached"
+    },
+    {
+      "file": "earth_clouds.jpg",
+      "bytes": 965676,
+      "sources": [
+        "https://www.solarsystemscope.com/textures/download/2k_earth_clouds.jpg"
+      ],
+      "credit": "Solar System Scope / INOVE, https://www.solarsystemscope.com/textures/ — CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/). 底图源自 NASA 等公开影像。",
+      "desc": "地球云层（用作透明云图）",
+      "required": true,
+      "status": "cached"
+    },
+    {
+      "file": "earth_specular.jpg",
+      "bytes": 223421,
+      "sources": [
+        "https://gcore.jsdelivr.net/gh/mrdoob/three.js@r186/examples/textures/planets/earth_specular_2048.jpg",
+        "https://cdn.jsdelivr.net/gh/mrdoob/three.js@r186/examples/textures/planets/earth_specular_2048.jpg",
+        "https://fastly.jsdelivr.net/gh/mrdoob/three.js@r186/examples/textures/planets/earth_specular_2048.jpg"
+      ],
+      "credit": "three.js examples/textures (MIT licensed project); NASA Blue Marble / 城市灯光影像为公有领域（public domain）。",
+      "desc": "地球高光/海洋掩膜（海面反光）",
+      "required": false,
+      "status": "cached"
+    },
+    {
+      "file": "sun.jpg",
+      "bytes": 822427,
+      "sources": [
+        "https://www.solarsystemscope.com/textures/download/2k_sun.jpg"
+      ],
+      "credit": "Solar System Scope / INOVE, https://www.solarsystemscope.com/textures/ — CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/). 底图源自 NASA 等公开影像。",
+      "desc": "太阳光球表面纹理",
+      "required": true,
+      "status": "cached"
+    },
+    {
+      "file": "stars_milkyway.jpg",
+      "bytes": 251454,
+      "sources": [
+        "https://www.solarsystemscope.com/textures/download/2k_stars_milky_way.jpg"
+      ],
+      "credit": "Solar System Scope / INOVE, https://www.solarsystemscope.com/textures/ — CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/). 底图源自 NASA 等公开影像。",
+      "desc": "银河星空背景（等距柱状投影，贴到天球内侧）",
+      "required": true,
+      "status": "cached"
+    }
+  ],
+  "summary": {
+    "total": 7,
+    "ok": 7,
+    "failed": 0,
+    "note": "运行时若某张纹理缺失，three/TextureLoader2 会回退到程序化生成的等效纹理（见 src/three/proceduralTextures.js），页面仍可正常使用，仅真实感下降。"
+  }
+}

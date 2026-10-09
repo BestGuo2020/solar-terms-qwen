@@ -1,0 +1,25 @@
+{
+  "name": "jieqi24",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "description": "二十四节气互动科普网站 — Three.js 地球公转 3D 场景 + 天文历算 + 传统文化",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview --host 127.0.0.1 --port 4173",
+    "verify:astro": "node scripts/verify-astro.mjs",
+    "verify:scene": "node scripts/verify-scene.mjs",
+    "verify": "node scripts/verify-astro.mjs && node scripts/verify-scene.mjs && node scripts/verify-content.mjs",
+    "fetch:textures": "node scripts/fetch-textures.mjs"
+  },
+  "dependencies": {
+    "astronomy-engine": "^2.1.19",
+    "three": "^0.186.1",
+    "vue": "^3.5.13"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^6.0.0",
+    "vite": "^7.0.0"
+  }
+}
