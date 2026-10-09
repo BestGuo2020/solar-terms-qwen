@@ -1,20 +1,20 @@
 /**
- * 工具栏折叠回归检查
+ * 场景控制面板（⚙ 弹出面板）与紧凑天文读数的回归检查
  *   node .tools/check-toolbar-collapse.mjs
  * 需要：npm run build 且 npm run preview（http://127.0.0.1:4173）
  *
  * 断言：
- *  1. 存在折叠开关按钮，且带 aria-expanded / aria-controls；
- *  2. 点击后三行控制被隐藏、开关仍可见，工具栏整体高度显著变小；
- *  3. 再点一次恢复，全部按钮重新可见（视角 5 + 辅助 7 + 标签 3 + 画质 3 + 保存 1 = 19）；
- *  4. 折叠状态写入 localStorage，刷新后保持；
- *  5. 两种状态下整页与舞台均无横向溢出；
- *  6. 移动端（390px）同样可折叠且无溢出。
+ *  1. 默认只有一颗 ⚙ 圆形按钮，面板隐藏（画面干净）；
+ *  2. 点开后 19 个控制齐全（视角5 + 辅助7 + 标签3 + 画质3 + 保存1），aria-expanded 同步；
+ *  3. 面板内开关真实生效（关掉"轨道"后 rig.ring.visible === false）；
+ *  4. 再点收起，面板隐藏；开/合状态写入 localStorage 且刷新后保持；
+ *  5. 左下天文读数默认单行、说明隐藏，点击展开说明；
+ *  6. 面板开/合两种状态在 1400px 与 390px 下均无横向溢出。
  */
 import { spawn } from 'node:child_process'
 import { writeFile } from 'node:fs/promises'
 const EDGE = process.env.EDGE_PATH || 'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe'
-const PORT = 9357
+const PORT = 9383
 const BASE = 'http://127.0.0.1:4173/?nodegrade=1&q=medium'
 const OUT = 'D:\\vueprojects\\jieqi24\\.shots'
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms))
@@ -23,7 +23,7 @@ const ok = (m) => console.log('  ✓ ' + m)
 const bad = (m) => { failures++; console.log('  ✗ ' + m) }
 
 const b = spawn(EDGE, ['--headless=new', `--remote-debugging-port=${PORT}`, '--remote-allow-origins=*',
-  '--user-data-dir=D:\\vueprojects\\jieqi24\\.shots\\collapse-profile', '--no-first-run', '--no-default-browser-check',
+  '--user-data-dir=D:\\vueprojects\\jieqi24\\.shots\\panel-profile', '--no-first-run', '--no-default-browser-check',
   '--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--window-size=1400,900', 'about:blank'],
   { stdio: 'ignore' })
 process.on('exit', () => { try { b.kill('SIGKILL') } catch {} })
@@ -34,106 +34,128 @@ const ws = new WebSocket(t.webSocketDebuggerUrl)
 await new Promise((r) => { ws.onopen = r })
 let id = 0
 const pend = new Map()
-ws.onmessage = (e) => { const m = JSON.parse(e.data); if (m.id && pend.has(m.id)) { pend.get(m.id)(m.result); pend.delete(m.id) } }
-const send = (method, params = {}) => new Promise((res) => { const i = ++id; pend.set(i, res); ws.send(JSON.stringify({ id: i, method, params })) })
+ws.onmessage = (e) => {
+  const m = JSON.parse(e.data)
+  const p = pend.get(m.id)
+  if (!p) return
+  pend.delete(m.id)
+  if (m.error) p.reject(new Error(m.error.message))
+  else p.resolve(m.result)
+}
+function send(method, params = {}, timeoutMs = 30000) {
+  const i = ++id
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(() => { pend.delete(i); reject(new Error(method + ' 超时')) }, timeoutMs)
+    pend.set(i, { resolve: (v) => { clearTimeout(timer); resolve(v) }, reject: (e) => { clearTimeout(timer); reject(e) } })
+    ws.send(JSON.stringify({ id: i, method, params }))
+  })
+}
 const ev = async (expr) => (await send('Runtime.evaluate', { expression: expr, returnByValue: true, awaitPromise: true })).result.value
 await send('Runtime.enable'); await send('Page.enable')
-
-async function state() {
-  return ev(`(() => {
-    const toggle = document.querySelector('.hud-tools__toggle');
-    const rows = document.getElementById('hud-tools-rows');
-    const tools = document.querySelector('.hud-tools');
-    const btns = rows ? rows.querySelectorAll('button').length : 0;
-    const rowsVisible = !!rows && rows.getClientRects().length > 0;
-    return {
-      hasToggle: !!toggle,
-      ariaExpanded: toggle?.getAttribute('aria-expanded'),
-      ariaControls: toggle?.getAttribute('aria-controls'),
-      rowsVisible,
-      btnCount: btns,
-      toolsH: tools ? Math.round(tools.getBoundingClientRect().height) : -1,
-      toggleVisible: !!toggle && toggle.getClientRects().length > 0,
-      ls: localStorage.getItem('jieqi24.toolsCollapsed'),
-      docOverflow: document.documentElement.scrollWidth > window.innerWidth + 1,
-    };
-  })()`)
-}
-async function clickToggle() {
-  await ev(`(() => { document.querySelector('.hud-tools__toggle').click(); return 1 })()`)
-  await sleep(350)
-}
-async function shot(name) {
-  const r = await send('Page.captureScreenshot', { format: 'png' })
-  await writeFile(`${OUT}/${name}.png`, Buffer.from(r.data, 'base64'))
-  console.log('  📷 ' + name + '.png')
-}
-
 await send('Page.navigate', { url: BASE })
-await sleep(6500)
-await ev(`(() => { localStorage.removeItem('jieqi24.toolsCollapsed'); return 1 })()`)
+await sleep(3000)
+await ev(`(() => { localStorage.removeItem('jieqi24.hudPanel'); return 1 })()`)
 await send('Page.navigate', { url: BASE + '&r=' + Date.now() })
-await sleep(6000)
+await sleep(3000)
+const ready = await (async () => {
+  const t0 = Date.now()
+  while (Date.now() - t0 < 30000) {
+    try { const v = await ev(`!!(window.__jieqi && window.__jieqi.scene && window.__jieqi.scene.earth)`); if (v) return true } catch {}
+    await sleep(500)
+  }
+  return false
+})()
+if (!ready) { bad('场景 30 秒未就绪'); console.log('=== 提前结束 ==='); process.exit(1) }
 
-console.log('\n[1] 桌面端 1400px')
+const state = () => ev(`(() => {
+  const fab = document.querySelector('.hud-fab');
+  const panel = document.getElementById('hud-panel');
+  const geo = document.querySelector('.hud-geo');
+  return {
+    hasFab: !!fab,
+    ariaControls: fab?.getAttribute('aria-controls'),
+    ariaExpanded: fab?.getAttribute('aria-expanded'),
+    panelVisible: !!panel && panel.getClientRects().length > 0,
+    panelBtns: panel ? panel.querySelectorAll('button').length : 0,
+    panelW: panel ? Math.round(panel.getBoundingClientRect().width) : 0,
+    geoNoteVisible: !!geo && !!geo.querySelector('.hud-geo__note') && geo.querySelector('.hud-geo__note').getClientRects().length > 0,
+    geoLines: geo ? geo.querySelectorAll('.hud-geo__line').length : 0,
+    docOverflow: document.documentElement.scrollWidth > window.innerWidth + 1,
+    ls: localStorage.getItem('jieqi24.hudPanel'),
+  };
+})()`)
+const clickFab = async () => { await ev(`(() => { document.querySelector('.hud-fab').click(); return 1 })()`); await sleep(350) }
+
+console.log('\n[1] 默认收起')
 let s = await state()
-if (s.hasToggle && s.ariaControls === 'hud-tools-rows') ok('折叠开关存在，aria-controls 指向控制行容器')
-else bad(`开关/aria 异常：hasToggle=${s.hasToggle} ariaControls=${s.ariaControls}`)
-if (s.ariaExpanded === 'true' && s.rowsVisible) ok(`默认展开：aria-expanded=true，控制行可见（${s.btnCount} 个按钮），工具栏高 ${s.toolsH}px`)
-else bad(`默认状态异常：ariaExpanded=${s.ariaExpanded} rowsVisible=${s.rowsVisible}`)
-const expandedH = s.toolsH
-if (s.btnCount === 19) ok('展开时 19 个控制按钮齐全（视角5+辅助7+标签3+画质3+保存1）')
-else bad(`展开按钮数 ${s.btnCount} ≠ 19`)
+if (s.hasFab && s.ariaControls === 'hud-panel' && s.ariaExpanded === 'false' && !s.panelVisible) ok('默认只有一颗 ⚙ 按钮（aria-controls=hud-panel），面板隐藏')
+else bad(`默认状态异常：${JSON.stringify(s)}`)
+if (!s.docOverflow) ok('默认状态无横向溢出')
+
+console.log('\n[2] 展开后控制齐全且生效')
+await clickFab()
+s = await state()
+if (s.panelVisible && s.panelBtns === 19 && s.ariaExpanded === 'true') ok(`面板展开：19 个控制（视角5+辅助7+标签3+画质3+保存1），宽 ${s.panelW}px`)
+else bad(`展开异常：visible=${s.panelVisible} btns=${s.panelBtns} expanded=${s.ariaExpanded}`)
+const toggled = await ev(`(() => {
+  const j = window.__jieqi;
+  const btn = [...document.querySelectorAll('#hud-panel button')].find((b2) => b2.textContent.trim() === '轨道' || b2.textContent.trim() === 'Orbit');
+  btn.click();
+  const off = j.scene.rig.ring.visible;
+  btn.click();
+  const on = j.scene.rig.ring.visible;
+  return { off, on };
+})()`)
+if (toggled.off === false && toggled.on === true) ok('面板内"轨道"开关真实生效（ring.visible 随点击切换）')
+else bad(`面板开关无效：${JSON.stringify(toggled)}`)
 if (!s.docOverflow) ok('展开状态无横向溢出')
-else bad('展开状态出现横向溢出')
-await shot('toolbar-expanded')
+await (async () => { const r = await send('Page.captureScreenshot', { format: 'png' }); await writeFile(OUT + '/panel-open.png', Buffer.from(r.data, 'base64')); console.log('  📷 panel-open.png') })()
 
-await clickToggle()
+console.log('\n[3] 收起与偏好持久化')
+await clickFab()
 s = await state()
-if (!s.rowsVisible && s.toggleVisible) ok(`折叠后控制行隐藏、开关仍可见，工具栏高 ${s.toolsH}px（展开时 ${expandedH}px）`)
-else bad(`折叠状态异常：rowsVisible=${s.rowsVisible} toggleVisible=${s.toggleVisible}`)
-if (s.toolsH <= 40) ok(`折叠后工具栏高度 ${s.toolsH}px ≤ 40px，只剩一个图标`)
-else bad(`折叠后工具栏仍高 ${s.toolsH}px`)
-if (s.ariaExpanded === 'false') ok('aria-expanded 同步为 false')
-else bad(`aria-expanded=${s.ariaExpanded}`)
-if (s.ls === '1') ok('折叠状态已写入 localStorage')
-else bad(`localStorage 值 = ${s.ls}`)
-if (!s.docOverflow) ok('折叠状态无横向溢出')
-else bad('折叠状态出现横向溢出')
-await shot('toolbar-collapsed')
-
-await clickToggle()
-s = await state()
-if (s.rowsVisible && s.btnCount === 19 && s.ariaExpanded === 'true') ok('再次点击恢复展开，19 个按钮全部回来')
-else bad(`恢复展开异常：rowsVisible=${s.rowsVisible} btnCount=${s.btnCount}`)
-
-console.log('\n[2] 刷新后保持折叠偏好')
-await clickToggle()           // 折起来
+if (!s.panelVisible && s.ariaExpanded === 'false' && s.ls === '0') ok('再次点击收起，偏好写入 localStorage=0')
+else bad(`收起异常：${JSON.stringify(s)}`)
+await clickFab()
 await send('Page.navigate', { url: BASE + '&r2=' + Date.now() })
-await sleep(6000)
+await sleep(3000)
+await (async () => {
+  const t0 = Date.now()
+  while (Date.now() - t0 < 30000) {
+    try { const v = await ev(`!!(window.__jieqi && window.__jieqi.scene)`); if (v) break } catch {}
+    await sleep(500)
+  }
+})()
 s = await state()
-if (!s.rowsVisible && s.ls === '1') ok('刷新后仍为折叠状态（偏好被记住）')
-else bad(`刷新后状态异常：rowsVisible=${s.rowsVisible} ls=${s.ls}`)
-await clickToggle()           // 恢复展开，避免影响其它检查
-s = await state()
-if (s.rowsVisible) ok('已恢复展开')
+if (s.panelVisible && s.ls === '1') ok('刷新后面板保持展开（偏好被记住）')
+else bad(`刷新后状态异常：visible=${s.panelVisible} ls=${s.ls}`)
+await clickFab()   // 收起来，保持画面干净
 
-console.log('\n[3] 移动端 390px')
+console.log('\n[4] 天文读数单行 / 展开')
+s = await state()
+if (s.geoLines === 1 && !s.geoNoteVisible) ok('天文读数默认单行、映射说明隐藏')
+else bad(`读数默认状态异常：lines=${s.geoLines} note=${s.geoNoteVisible}`)
+await ev(`(() => { document.querySelector('.hud-geo').click(); return 1 })()`)
+await sleep(300)
+s = await state()
+if (s.geoNoteVisible) ok('点击读数条后展开映射说明')
+else bad('读数说明未展开')
+await ev(`(() => { document.querySelector('.hud-geo').click(); return 1 })()`)
+await sleep(200)
+
+console.log('\n[5] 移动端 390px')
 await send('Emulation.setDeviceMetricsOverride', { width: 390, height: 844, deviceScaleFactor: 1, mobile: true })
 await sleep(900)
-await ev(`(() => { const e = document.querySelector('.hud-tools'); if (e) e.scrollIntoView({ block: 'center' }); return 1 })()`)
-await sleep(400)
 s = await state()
-if (!s.docOverflow) ok('移动端展开状态无横向溢出')
-else bad('移动端展开状态横向溢出')
-await clickToggle()
+if (!s.docOverflow && !s.panelVisible) ok('移动端默认无溢出且面板收起')
+else bad(`移动端异常：overflow=${s.docOverflow} panel=${s.panelVisible}`)
+await clickFab()
 s = await state()
-if (!s.rowsVisible && !s.docOverflow) ok(`移动端可折叠（工具栏高 ${s.toolsH}px）且无横向溢出`)
-else bad(`移动端折叠异常：rowsVisible=${s.rowsVisible} overflow=${s.docOverflow}`)
-await shot('mobile-toolbar-collapsed')
-await clickToggle()
+if (s.panelVisible && !s.docOverflow && s.panelW <= 390) ok(`移动端面板展开宽 ${s.panelW}px ≤ 视口，无溢出`)
+else bad(`移动端展开异常：w=${s.panelW} overflow=${s.docOverflow}`)
+await (async () => { const r = await send('Page.captureScreenshot', { format: 'png' }); await writeFile(OUT + '/panel-mobile-open.png', Buffer.from(r.data, 'base64')); console.log('  📷 panel-mobile-open.png') })()
 await send('Emulation.clearDeviceMetricsOverride')
 
-console.log(failures === 0 ? '\n=== 工具栏折叠检查全部通过 ===' : `\n=== ${failures} 项失败 ===`)
+console.log(failures === 0 ? '\n=== 面板与读数检查全部通过 ===' : `\n=== ${failures} 项失败 ===`)
 ws.close()
 process.exit(failures === 0 ? 0 : 1)

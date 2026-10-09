@@ -58,16 +58,18 @@ const currentView = ref('default')
 const fps = ref(null)
 const autoDegraded = ref(null)
 
-// --- 工具栏折叠：PC 端按钮较多，提供一个图标按钮把整组控制收起来 ---
-const TOOLS_LS_KEY = 'jieqi24.toolsCollapsed'
-function readToolsCollapsed() {
-  try { return localStorage.getItem(TOOLS_LS_KEY) === '1' } catch { return false }
+// --- 右下角控制面板：默认收起为一个圆形按钮，点开才是分组面板 ---
+const PANEL_LS_KEY = 'jieqi24.hudPanel'
+function readPanelOpen() {
+  try { return localStorage.getItem(PANEL_LS_KEY) === '1' } catch { return false }
 }
-const toolsCollapsed = ref(readToolsCollapsed())
-function toggleTools() {
-  toolsCollapsed.value = !toolsCollapsed.value
-  try { localStorage.setItem(TOOLS_LS_KEY, toolsCollapsed.value ? '1' : '0') } catch { /* 隐私模式下忽略 */ }
+const panelOpen = ref(readPanelOpen())
+function togglePanel() {
+  panelOpen.value = !panelOpen.value
+  try { localStorage.setItem(PANEL_LS_KEY, panelOpen.value ? '1' : '0') } catch { /* ignore */ }
 }
+// 左下天文读数：默认一行，点击展开说明
+const geoOpen = ref(false)
 
 // 支持 ?q=high|medium|low 固定画质、?nodegrade 关闭自动降级（验收与慢机器排查用）
 const urlParams = typeof location !== 'undefined' ? new URLSearchParams(location.search) : new URLSearchParams()
@@ -227,53 +229,65 @@ defineExpose({ setView, resetView, manager: () => manager })
         </div>
       </div>
 
-      <dl class="hud-geo">
-        <dt>{{ t('geo.sunLon') }}</dt><dd>{{ geo.sunLon }}</dd>
-        <dt>{{ t('geo.earthLon') }}</dt><dd>{{ geo.earthLon }}</dd>
-        <dt>{{ t('geo.sub') }}</dt><dd>{{ geo.subLat }}</dd>
-        <dt>{{ t('geo.tilt') }}</dt><dd>{{ geo.tilt }}</dd>
-        <span class="hud-geo__note">{{ t('geo.note') }}</span>
-      </dl>
+      <!-- 天文读数：默认一行，点击展开映射说明 -->
+      <button type="button" class="hud-geo" :class="{ 'is-open': geoOpen }"
+              :aria-expanded="String(geoOpen)" :title="t('geo.toggleTip')" @click="geoOpen = !geoOpen">
+        <span class="hud-geo__line">
+          <b>λ☉</b> {{ geo.sunLon }}<i>·</i><b>L⊕</b> {{ geo.earthLon }}<i>·</i><b>{{ t('geo.sub') }}</b> {{ geo.subLat }}<i>·</i><b>ε</b> {{ geo.tilt }}
+        </span>
+        <span class="hud-geo__note" v-show="geoOpen">{{ t('geo.note') }}</span>
+      </button>
 
       <div class="hud-bottomright">
         <ul class="hud-notes" v-if="statusNotes.length" aria-live="polite">
           <li v-for="(n, i) in statusNotes" :key="i">{{ n }}</li>
         </ul>
-        <div class="hud-tools" :class="{ 'is-collapsed': toolsCollapsed }">
-          <button type="button" class="btn btn--icon hud-tools__toggle"
-                  :aria-expanded="String(!toolsCollapsed)"
-                  aria-controls="hud-tools-rows"
-                  :title="toolsCollapsed ? t('tools.expand') : t('tools.collapse')"
-                  :aria-label="toolsCollapsed ? t('tools.expand') : t('tools.collapse')"
-                  @click="toggleTools">
-            <span aria-hidden="true">{{ toolsCollapsed ? '⚙' : '✕' }}</span>
-          </button>
-          <div class="hud-tools__rows" id="hud-tools-rows">
-            <div class="hud-tools__row" role="group" :aria-label="t('tools.views')">
-              <button v-for="v in VIEWS" :key="v.id" type="button" class="btn"
-                      :class="{ 'is-on': currentView === v.id }" :aria-pressed="currentView === v.id"
-                      :title="t('view.' + v.id + '.hint')" @click="setView(v.id)">{{ t('view.' + v.id) }}</button>
-              <button type="button" class="btn" :title="t('view.reset.hint')" @click="resetView">{{ t('view.reset') }}</button>
+
+        <div class="hud-panel-wrap">
+          <!-- 弹出面板：分组收纳全部场景控制 -->
+          <div id="hud-panel" class="hud-panel" v-show="panelOpen" role="group" :aria-label="t('tools.panel')">
+            <div class="hud-panel__group">
+              <span class="hud-panel__t">{{ t('tools.views') }}</span>
+              <div class="hud-panel__grid">
+                <button v-for="v in VIEWS" :key="v.id" type="button" class="btn btn--sm"
+                        :class="{ 'is-on': currentView === v.id }" :aria-pressed="currentView === v.id"
+                        :title="t('view.' + v.id + '.hint')" @click="setView(v.id)">{{ t('view.' + v.id) }}</button>
+                <button type="button" class="btn btn--sm" :title="t('view.reset.hint')" @click="resetView">{{ t('view.reset') }}</button>
+              </div>
             </div>
-            <div class="hud-tools__row" role="group" :aria-label="t('tools.helpers')">
-              <button v-for="h in helperDefs" :key="h.key" type="button" class="btn"
-                      :aria-pressed="helpers[h.key]" :title="t(h.hintKey)"
-                      @click="toggleHelper(h.key)">{{ t(h.labelKey) }}</button>
+            <div class="hud-panel__group">
+              <span class="hud-panel__t">{{ t('tools.helpers') }}</span>
+              <div class="hud-panel__grid hud-panel__grid--helpers">
+                <button v-for="h in helperDefs" :key="h.key" type="button" class="btn btn--sm"
+                        :aria-pressed="helpers[h.key]" :title="t(h.hintKey)"
+                        @click="toggleHelper(h.key)">{{ t(h.labelKey) }}</button>
+              </div>
             </div>
-            <div class="hud-tools__row">
+            <div class="hud-panel__group hud-panel__row">
               <span class="controls__label">{{ t('tools.labels') }}</span>
-              <span class="seg" role="group" :aria-label="t('tools.labels')">
+              <span class="seg seg--sm" role="group" :aria-label="t('tools.labels')">
                 <button v-for="m in labelModes" :key="m.value" type="button"
                         :aria-pressed="helpers.labels === m.value" @click="setLabelMode(m.value)">{{ t(m.labelKey) }}</button>
               </span>
+            </div>
+            <div class="hud-panel__group hud-panel__row">
               <span class="controls__label">{{ t('tools.quality') }}</span>
-              <span class="seg" role="group" :aria-label="t('tools.quality')">
+              <span class="seg seg--sm" role="group" :aria-label="t('tools.quality')">
                 <button v-for="q in qualityOpts" :key="q.v" type="button"
                         :aria-pressed="quality === q.v" @click="setQuality(q.v)">{{ t(q.labelKey) }}</button>
               </span>
-              <button type="button" class="btn" :title="t('tools.saveTip')" @click="saveSnapshot">{{ t('tools.save') }}</button>
+              <button type="button" class="btn btn--sm" :title="t('tools.saveTip')" @click="saveSnapshot">{{ t('tools.save') }}</button>
             </div>
           </div>
+
+          <!-- 唯一的常驻按钮 -->
+          <button type="button" class="hud-fab"
+                  :aria-expanded="String(panelOpen)" aria-controls="hud-panel"
+                  :title="panelOpen ? t('tools.close') : t('tools.open')"
+                  :aria-label="panelOpen ? t('tools.close') : t('tools.open')"
+                  @click="togglePanel">
+            <span aria-hidden="true">{{ panelOpen ? '✕' : '⚙' }}</span>
+          </button>
         </div>
       </div>
     </div>
@@ -292,13 +306,6 @@ defineExpose({ setView, resetView, manager: () => manager })
   display: flex; flex-direction: column; align-items: flex-end; gap: 8px;
   max-width: min(460px, 66%);
 }
-/* 折叠开关：始终可见；折叠时只留这一个图标 */
-.hud-tools__toggle {
-  align-self: flex-end;
-  font-size: 14px; line-height: 1;
-  min-width: 34px; height: 30px;
-}
-.hud-tools.is-collapsed .hud-tools__rows { display: none; }
 .hud-notes {
   margin: 0; padding: 0; list-style: none; display: grid; gap: 5px; width: 100%;
 }
@@ -307,6 +314,45 @@ defineExpose({ setView, resetView, manager: () => manager })
   background: rgba(60, 42, 12, 0.82); border: 1px solid rgba(217,164,65,0.4);
   border-radius: 7px; padding: 5px 9px; backdrop-filter: blur(6px);
 }
+
+/* 唯一常驻的圆形按钮 */
+.hud-panel-wrap { position: relative; display: flex; flex-direction: column; align-items: flex-end; }
+.hud-fab {
+  width: 42px; height: 42px; border-radius: 50%;
+  display: inline-flex; align-items: center; justify-content: center;
+  font-size: 17px; line-height: 1; cursor: pointer;
+  color: var(--gold-soft);
+  background: rgba(14, 20, 34, 0.88);
+  border: 1px solid rgba(217, 164, 65, 0.45);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(8px);
+  transition: background 0.15s, transform 0.12s, border-color 0.15s;
+}
+.hud-fab:hover { background: rgba(30, 40, 62, 0.95); border-color: var(--gold); }
+.hud-fab:active { transform: scale(0.94); }
+.hud-fab[aria-expanded="true"] { background: rgba(217, 164, 65, 0.24); color: #fff3da; }
+
+/* 弹出面板 */
+.hud-panel {
+  position: absolute; right: 0; bottom: 50px;
+  width: 300px; max-width: calc(100vw - 24px);
+  background: linear-gradient(170deg, rgba(13, 19, 33, 0.96), rgba(8, 12, 22, 0.96));
+  border: 1px solid var(--line-dark);
+  border-radius: 12px;
+  padding: 12px 12px 10px;
+  box-shadow: 0 12px 34px rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(10px);
+  display: grid; gap: 10px;
+}
+.hud-panel__group { display: grid; gap: 6px; }
+.hud-panel__t {
+  font-size: 10.5px; letter-spacing: 0.14em; color: var(--fg-faint);
+  text-transform: uppercase;
+}
+.hud-panel__grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; }
+.hud-panel__grid--helpers { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.hud-panel__grid .btn { width: 100%; }
+.hud-panel__row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 
 /* 移动端：HUD 脱离场景、排到下方，避免遮挡地球和轨道 */
 @media (max-width: 760px) {
@@ -320,8 +366,7 @@ defineExpose({ setView, resetView, manager: () => manager })
   .hud-clock { align-items: stretch; }
   .hud-clock__time { text-align: left; min-width: 0; }
   .hud-bottomright { align-items: flex-start; }
-  .hud-tools { align-items: flex-start; }
-  .hud-tools__toggle { align-self: flex-start; }
-  .hud-tools__row { justify-content: flex-start; }
+  .hud-panel-wrap { align-items: flex-start; }
+  .hud-panel { right: auto; left: 0; bottom: 50px; }
 }
 </style>

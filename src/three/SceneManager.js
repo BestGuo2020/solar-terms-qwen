@@ -265,8 +265,9 @@ export class SceneManager {
     const def = o.userData.labelDef
     if (!el || !def) return
     if (def.isReference) {
-      el.innerHTML = `<span class="marker__name">${t('ref.' + def.refKey)}</span>` +
-        `<span class="marker__sub">${t('ref.' + def.refKey + 'Sub')}</span>`
+      // 参考标识只留一行主文字，副标题放进 title，减少画面噪点
+      el.title = t('ref.' + def.refKey + 'Sub')
+      el.innerHTML = `<span class="marker__name">${t('ref.' + def.refKey)}</span>`
       return
     }
     const term = currentContent().termsByIndex.get(def.index)
