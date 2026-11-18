@@ -1,0 +1,21 @@
+{
+  "name": "jieqi24-solar-terms",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "description": "二十四节气互动科普网站 · Interactive 24 Solar Terms explorer (Three.js)",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "verify:terms": "node scripts/verify-terms.mjs"
+  },
+  "dependencies": {
+    "three": "0.160.0",
+    "vue": "^3.4.21"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^5.0.4",
+    "vite": "^5.2.0"
+  }
+}
