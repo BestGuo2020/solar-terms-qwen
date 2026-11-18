@@ -2,6 +2,7 @@ node_modules/
 dist/
 .npm-cache/
 .tmp/
+.tmp-build/
 .shots/
 .acl-recovery/
 *.log

@@ -17,7 +17,9 @@ import {
   makeFallbackEarthDay, makeFallbackEarthNight, makeFallbackClouds, makeFallbackSun,
 } from './proceduralTextures.js'
 
-const BASE = './textures/'
+// BASE_URL follows vite.config.js `base`, so textures resolve correctly both
+// in local dev ('/') and when deployed under a sub-path ('/qwen3.8-max/').
+const BASE = import.meta.env.BASE_URL + 'textures/'
 
 /** 纹理清单：url 为相对 public/ 的路径，fallback 为程序化替代生成器 */
 export const TEXTURE_SPECS = {

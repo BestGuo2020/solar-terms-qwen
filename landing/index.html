@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>二十四节气 · 模型版本合集</title>
+  <meta name="description" content="二十四节气互动科普网站：Three.js 地球公转 3D 场景 + 天文历算 + 传统文化，三个模型构建版本对比。" />
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-2PMNQJPWBM"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-2PMNQJPWBM');
+  </script>
+  <style>
+    :root { color-scheme: dark; }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      min-height: 100vh;
+      font-family: "PingFang SC", "Microsoft YaHei", "Noto Sans SC", system-ui, sans-serif;
+      background: radial-gradient(ellipse at 50% -20%, #1b2a52 0%, #0b1020 55%, #06080f 100%);
+      color: #e8ecf6;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      padding: 48px 20px;
+    }
+    h1 { font-size: clamp(28px, 5vw, 44px); font-weight: 700; letter-spacing: .12em; }
+    h1 span { color: #f5c66b; }
+    .sub { margin-top: 14px; color: #9aa7c4; font-size: 15px; letter-spacing: .06em; text-align: center; line-height: 1.8; }
+    .cards { margin-top: 44px; display: grid; gap: 20px; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); width: min(920px, 100%); }
+    a.card {
+      display: block; text-decoration: none; color: inherit;
+      background: rgba(255,255,255,.045);
+      border: 1px solid rgba(255,255,255,.10);
+      border-radius: 16px; padding: 26px 24px;
+      transition: transform .18s ease, border-color .18s ease, background .18s ease;
+    }
+    a.card:hover { transform: translateY(-4px); border-color: rgba(245,198,107,.55); background: rgba(255,255,255,.07); }
+    .card h2 { font-size: 19px; color: #f5c66b; letter-spacing: .04em; }
+    .card p { margin-top: 10px; font-size: 13.5px; color: #9aa7c4; line-height: 1.7; }
+    .card .path { margin-top: 14px; font-size: 12px; color: #6f7d9e; font-family: ui-monospace, Consolas, monospace; }
+    footer { margin-top: 48px; font-size: 12.5px; color: #6f7d9e; text-align: center; line-height: 1.9; }
+    footer a { color: #9aa7c4; }
+  </style>
+</head>
+<body>
+  <h1>二十四<span>节气</span></h1>
+  <p class="sub">同一个命题，三种模型实现 · Three.js 地球公转 3D 场景 · 天文历算 · 传统文化<br />选择一个版本进入</p>
+  <div class="cards">
+    <a class="card" href="/qwen3.8-max/">
+      <h2>Qwen3.8-Max 版</h2>
+      <p>Vue 3 + Three.js，含天文校验脚本、纹理许可清单与高画质星空。</p>
+      <div class="path">/qwen3.8-max/</div>
+    </a>
+    <a class="card" href="/qwen4-max-preview/">
+      <h2>Qwen4-Max-Preview 版</h2>
+      <p>Vue 3 + Three.js，节气历算校验，常驻视角分段控件与画质面板。</p>
+      <div class="path">/qwen4-max-preview/</div>
+    </a>
+    <a class="card" href="/qwen4-max/">
+      <h2>Qwen4-Max 版</h2>
+      <p>原生 JS + Three.js，昼夜地表着色器与太阳辉光，轻量直接。</p>
+      <div class="path">/qwen4-max/</div>
+    </a>
+  </div>
+  <footer>
+    源码：<a href="https://github.com/BestGuo2020/solar-terms-qwen" target="_blank" rel="noopener">github.com/BestGuo2020/solar-terms-qwen</a><br />
+    行星纹理来自 Solar System Scope（CC BY 4.0）与 three.js 示例资源，详见各版本内说明。
+  </footer>
+</body>
+</html>

@@ -1,0 +1,13 @@
+{
+  "name": "solar-terms-qwen",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "description": "二十四节气互动科普网站合集：三个模型版本，同一域名下按子路径发布（EdgeOne Pages）。",
+  "scripts": {
+    "build": "node scripts/build-all.mjs",
+    "dev:3.8": "npm --prefix qwen-3.8-max run dev",
+    "dev:4-preview": "npm --prefix qwen-4-max-preview run dev",
+    "dev:4": "npm --prefix qwen-4-max run dev"
+  }
+}

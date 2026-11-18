@@ -124,11 +124,11 @@ export function createEarth(loader) {
   const surface = new THREE.Mesh(new THREE.SphereGeometry(EARTH_R, 64, 64), surfaceMat);
   tiltGroup.add(surface);
 
-  loader.load('/textures/2k_earth_daymap.jpg',
+  loader.load(import.meta.env.BASE_URL + 'textures/2k_earth_daymap.jpg',
     (tex) => { tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = 8; surfaceMat.uniforms.dayMap.value.dispose(); surfaceMat.uniforms.dayMap.value = tex; },
     undefined, () => {},
   );
-  loader.load('/textures/2k_earth_nightmap.jpg',
+  loader.load(import.meta.env.BASE_URL + 'textures/2k_earth_nightmap.jpg',
     (tex) => { tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = 8; surfaceMat.uniforms.nightMap.value.dispose(); surfaceMat.uniforms.nightMap.value = tex; },
     undefined, () => {},
   );
@@ -139,7 +139,7 @@ export function createEarth(loader) {
   });
   const clouds = new THREE.Mesh(new THREE.SphereGeometry(EARTH_R * 1.012, 48, 48), cloudMat);
   tiltGroup.add(clouds);
-  loader.load('/textures/2k_earth_clouds.jpg',
+  loader.load(import.meta.env.BASE_URL + 'textures/2k_earth_clouds.jpg',
     (tex) => { cloudMat.alphaMap.dispose(); cloudMat.alphaMap = tex; cloudMat.needsUpdate = true; },
     undefined, () => {},
   );

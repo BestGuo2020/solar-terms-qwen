@@ -1,9 +1,10 @@
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 
-// base './' lets the built bundle run from any sub-path or a static file server.
-export default defineConfig({
-  base: './',
+// Deployed under https://<domain>/qwen3.8-max/ (see repo-root scripts/build-all.mjs).
+// Keep '/' for local dev; use the absolute sub-path base for production builds.
+export default defineConfig(({ command }) => ({
+  base: command === 'build' ? '/qwen3.8-max/' : '/',
   plugins: [vue()],
   build: {
     target: 'es2020',
@@ -22,4 +23,4 @@ export default defineConfig({
     port: 5173,
     strictPort: false,
   },
-})
+}))

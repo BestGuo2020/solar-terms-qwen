@@ -1,0 +1,11 @@
+{
+  "buildCommand": "npm run build",
+  "installCommand": "npm install --no-audit --no-fund",
+  "outputDirectory": "dist",
+  "nodeVersion": "22.17.1",
+  "redirects": [
+    { "source": "/qwen3.8-max", "destination": "/qwen3.8-max/", "statusCode": 301 },
+    { "source": "/qwen4-max-preview", "destination": "/qwen4-max-preview/", "statusCode": 301 },
+    { "source": "/qwen4-max", "destination": "/qwen4-max/", "statusCode": 301 }
+  ]
+}

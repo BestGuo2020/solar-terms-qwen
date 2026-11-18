@@ -48,7 +48,7 @@ export function createSun(loader) {
   const core = new THREE.Mesh(new THREE.SphereGeometry(SUN_R, 48, 48), material);
   group.add(core);
 
-  loader.load('/textures/2k_sun.jpg',
+  loader.load(import.meta.env.BASE_URL + 'textures/2k_sun.jpg',
     (tex) => { tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = 4; material.map = tex; material.needsUpdate = true; },
     undefined,
     () => { material.map = makeSunFallback(); material.needsUpdate = true; },
